@@ -1,0 +1,114 @@
+
+:icons: font
+ifdef::backend-pdf[]
+:title-page-background-image: image:images/Training_Cover.png[pdfwidth=8.0in,align=center]
+:pygments-style: tango
+:source-highlighter: pygments
+endif::[]
+ifndef::env-github[:icons: font]
+ifdef::env-github[]
+:status:
+:outfilesuffix: .adoc
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :paperclip:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+= DO467 - Ansible Automation Platform/Ansible Automation Controller (Taste of Training)
+
+
+== Preparing the Environment
+
+The demo folders have playbooks and setup scripts that will configure the DO467 Red Hat Training environment. These scripts and playbooks will clone down repositories as well as create a local Gitlab repository for use in the Web Hooks demo. The *CH8_Webhooks_Demo* will prepare the Ansible Automation Controller with the credentials, projects, and local Gitlab content for use in the classroom environment.
+
+.Demo Setup
+[source,bash]
+----
+cd Demo_Setup
+
+./Demo_Prep.sh
+----
++
+.Provide Github Credentials
+[TIP]
+======
+Edit the *vars.yml* and insert your Github PAT.
+======
+
+.Classroom Gitlab Setup
+[source,bash]
+----
+cd Demo_Setup/Gitlab
+
+./Setup_Gitlab.sh
+----
+
+.Webhook Demo Setup
+[source,bash]
+----
+[student@workstation ~]$ lab start code-webhooks
+
+[student@workstation ~]$ podman login hub.lab.example.com -u admin -p redhat
+
+
+cd CH8_Webhooks_Demo
+
+[student@workstation Webhooks]$ ansible-navigator run Site.yml
+
+----
+
+
+== Additional Repositories
+
+* https://github.com/tmichett/AAP2_Demos (Contains Playbooks for use in Workflow)
+** Specifically the https://github.com/tmichett/AAP2_Demos/blob/main/Deploy_WS_AAP2_Demo.yml was used.
+
+.*Deploy_WS_AAP2_Demo.yml* Content
+[source,yaml]
+----
+---
+- name: Playbook to Fully Setup and Configure a Webserver
+  hosts: "{{ inv_host_var }}"
+  tasks:
+    - name: Install Packages for Webserver
+      ansible.builtin.yum:
+        name:
+          - httpd
+          - firewalld
+        state: latest
+
+    - name: Create Content for Webserver
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: /var/www/html/
+      loop:
+        - files/penguin.png
+        - files/penguin2.png
+        - files/penguin3.jpg
+
+    - name: Create Content for Webserver
+      ansible.builtin.template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+
+    - name: Firewall is Enabled
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: HTTP Service is Open on Firewall
+      ansible.posix.firewalld:
+        service: http
+        state: enabled
+        permanent: true
+        immediate: yes
+
+    - name: httpd is started
+      ansible.builtin.systemd:
+        name: httpd
+        state: started
+        enabled: true
+----
