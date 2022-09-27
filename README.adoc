@@ -30,9 +30,9 @@ cd Demo_Setup
 
 ./Demo_Prep.sh
 ----
-+
+
 .Provide Github Credentials
-[TIP]
+[IMPORTANT]
 ======
 Edit the *vars.yml* and insert your Github PAT.
 ======
